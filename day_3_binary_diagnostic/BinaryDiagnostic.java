@@ -3,44 +3,122 @@ package day_3_binary_diagnostic;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import utils.InputReader;
 
 public class BinaryDiagnostic {
     public static void main(String[] args) {
         part1();
+        part2();
     }
+
+    public static void part2() {
+        List<String> input = getInput();
+
+        Integer oxygenGeneratorRating = getOxygenGeneratorRating(input);
+        Integer CO2ScrubberRating = getCO2ScrubberRating(input);
+
+        System.out.printf("oxygen generator rating * CO2 scrubber rating = %d", oxygenGeneratorRating * CO2ScrubberRating);
+    }
+
 
     public static void part1() {
         List<String> input = getInput();
         List<Integer> countOf1AtEachPosition = getCountof1AtEachPosition(input);
+        Integer totalRows = input.size();
 
-        Integer rowLength = input.size();
+        Integer gammaRate = convertFromBinary(getGammaRate(countOf1AtEachPosition, totalRows));
+        Integer epsilonRate = convertFromBinary(getEpsilonRate(countOf1AtEachPosition, totalRows));
 
-        System.out.print("obj");
+        System.out.printf("Gamma rate * Epsilon rate = %d", gammaRate * epsilonRate);
     }
 
-    private static Integer getGammaRate(List<Integer> countOf1AtEachPosition, Integer totalRows) {
-        List<Integer> binaryGamma = countOf1AtEachPosition.stream()
+    private static Integer getOxygenGeneratorRating(List<String> input) {
+        List<String> result = new ArrayList<>(input);
+
+        Integer columnLength = input.get(0).length();
+
+        for(int i = 0; i < columnLength; i++) {
+            List<String> intermediateResult = new ArrayList<>();
+
+            char mostCommonBitInColumnI = getGammaRate(getCountof1AtEachPosition(result), result.size()).charAt(i);
+            // System.out.println(getGammaRate(getCountof1AtEachPosition(result), input.size()));
+            for (String x: result) {
+                if (x.charAt(i) == mostCommonBitInColumnI) {
+                    intermediateResult.add(x);
+                }
+            }
+            
+            result = intermediateResult;
+
+            if (result.size() == 1) {
+                return convertFromBinary(result.get(0));
+            }
+
+        }
+
+        throw new RuntimeException("No match found");
+    }
+
+    private static Integer getCO2ScrubberRating(List<String> input) {
+        List<String> result = new ArrayList<>(input);
+
+        Integer columnLength = input.get(0).length();
+
+        for(int i = 0; i < columnLength; i++) {
+            List<String> intermediateResult = new ArrayList<>();
+
+            Character leastCommonBitInColumnI = getEpsilonRate(getCountof1AtEachPosition(result), result.size()).charAt(i);
+            
+            for (String x: result) {
+                if (x.charAt(i) == leastCommonBitInColumnI) {
+                    intermediateResult.add(x);
+                }
+            }
+            
+            result = intermediateResult;
+
+            if (result.size() == 1) {
+                return convertFromBinary(result.get(0));
+            }
+
+        }
+
+        throw new RuntimeException("No match found");
+    }
+
+    private static Integer convertFromBinary(String binaryString) {
+        return Integer.parseInt(binaryString, 2);
+    }
+
+    private static String getGammaRate(List<Integer> countOf1AtEachPosition, Integer totalRows) {
+        String binaryGamma = countOf1AtEachPosition.stream()
                                                           .map(i -> {
-                                                              if(i < totalRows/2) {
+                                                              if(i >= (totalRows-i)) {
+                                                                  return Integer.valueOf(1);
+                                                              } else {
+                                                                  return Integer.valueOf(0);
+                                                              }
+                                                            })
+                                                            .map(i -> String.valueOf(i))
+                                                          .collect(Collectors.joining());
+        return binaryGamma;
+    }
+
+    private static String getEpsilonRate(List<Integer> countOf1AtEachPosition, Integer totalRows) {
+        String binaryEpsilon = countOf1AtEachPosition.stream()
+                                                          .map(i -> {
+                                                              if(i >= (totalRows-i)) {
                                                                   return Integer.valueOf(0);
                                                               } else {
                                                                   return Integer.valueOf(1);
                                                               }
                                                             })
-                                                          .collect(Collectors.toList());
-        return 0;
-    }
-
-    private static void getEpsilonRate(List<Integer> countOf1AtEachPosition, Integer totalRows) {
-
+                                                            .map(i -> String.valueOf(i))
+                                                          .collect(Collectors.joining());
+        return binaryEpsilon;
     }
 
     private static List<String> getInput() {
